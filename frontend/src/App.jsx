@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer"; // ⬅️ add this
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -20,16 +21,22 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<Signup/>} />
-          <Route path="/dashboard" element={<Protected><Dashboard/></Protected>} />
-          <Route path="/albums" element={<Protected><Albums/></Protected>} />
-          <Route path="/search" element={<Protected><SearchResults/></Protected>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {/* App layout */}
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+              <Route path="/albums" element={<Protected><Albums /></Protected>} />
+              <Route path="/search" element={<Protected><SearchResults /></Protected>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer /> 
+        </div>
       </BrowserRouter>
     </AuthProvider>
   );

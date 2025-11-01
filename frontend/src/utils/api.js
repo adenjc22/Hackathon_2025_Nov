@@ -1,12 +1,13 @@
+// src/utils/api.js
 import axios from "axios";
 
-// Point this at your FastAPI base (dev env variable preferred)
+const USE_MSW = import.meta.env.VITE_USE_MSW === "true";
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000",
-  withCredentials: true, // if backend sets httpOnly cookies
+  baseURL: USE_MSW ? "" : (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"),
+  withCredentials: USE_MSW ? false : true, // cookies only needed when hitting real backend
 });
 
-// Basic error surfacing
 api.interceptors.response.use(
   (res) => res,
   (err) => {
