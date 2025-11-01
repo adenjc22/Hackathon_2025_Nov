@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.health import router as health_router
 from app.api.routes.uploads import router as uploads_router
+from app.api.routes.users import router as users_router
 
 app = FastAPI(
     title="Legacy Album API",
@@ -25,3 +26,4 @@ def root():
 # Include sub-routers
 app.include_router(health_router, prefix="/api/health", tags=["Health"])
 app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
+app.include_router(users_router, prefix="/api/users", tags=["Users"])
