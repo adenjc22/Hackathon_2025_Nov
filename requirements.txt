@@ -6,6 +6,7 @@ bcrypt
 passlib[bcrypt]
 python-multipart
 pydantic
+email-validator
 celery
 redis
 Pillow
