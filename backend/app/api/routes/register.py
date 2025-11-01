@@ -1,24 +1,30 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from users import User
+from app.database.models_user import User
+from fastapi import Form
+
+
 from hashlib import sha256
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter()
 
 @router.post("/")
-def register(username: str, password: str, db: Session = Depends(get_db)):
+def register(email: str = Form(...),
+            password: str = Form(...),
+            db: Session = Depends(get_db)):
+    
     # Check if user exists
-    existing_user = db.query(User).filter(User.username == username).first()
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Email already exists")
 
     # Hash password and save
     hashed_pw = sha256(password.encode()).hexdigest()
-    new_user = User(username=username, password=hashed_pw)
+    new_user = User(email=email, hashed_password=hashed_pw)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return {"message": "User registered successfully", "username": new_user.username}
+    return {"message": "User registered successfully", "email": new_user.email}
 

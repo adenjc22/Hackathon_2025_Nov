@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.health import router as health_router
 from app.api.routes.uploads import router as uploads_router
 from app.api.routes.users import router as users_router
+
 from app.api.routes.login import router as login_router
 from app.api.routes.register import router as register_router
 
@@ -29,5 +30,5 @@ def root():
 app.include_router(health_router, prefix="/api/health", tags=["Health"])
 app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(users_router, prefix="/api/users", tags=["Users"])
-app.include_router(login_router, prefix="/api/login", tags=["Login"])
-app.include_router(register_router, prefix="/api/register", tags=["Register"])
+app.include_router(login_router, prefix="/api/login", tags=["Auth"])
+app.include_router(register_router, prefix="/api/register", tags=["Auth"])
