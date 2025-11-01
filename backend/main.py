@@ -36,34 +36,56 @@ def root() -> str:
     <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Legacy Album | Register</title>
+        <title>Legacy Album | Auth</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
-                background: #f8fafc;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
+                background: #f1f5f9;
                 margin: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             main {
+                width: min(420px, calc(100vw - 2rem));
+                background: #fff;
+                border-radius: 14px;
                 padding: 2rem;
-                border-radius: 12px;
-                background: #ffffff;
-                box-shadow: 0 15px 35px rgba(15, 23, 42, 0.1);
-                width: min(400px, calc(100vw - 2rem));
+                box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
             }
             h1 {
-                margin-top: 0;
-                color: #0f172a;
+                margin: 0 0 0.75rem;
                 text-align: center;
+                color: #0f172a;
+            }
+            nav {
+                display: flex;
+                gap: 0.75rem;
+                justify-content: center;
+                margin-bottom: 1.5rem;
+            }
+            nav button {
+                border: none;
+                border-radius: 999px;
+                padding: 0.6rem 1.4rem;
+                font-weight: 600;
+                cursor: pointer;
+                background: #e2e8f0;
+                color: #0f172a;
+                transition: background 0.2s ease;
+            }
+            nav button.active {
+                background: #2563eb;
+                color: #fff;
             }
             form {
-                display: flex;
+                display: none;
                 flex-direction: column;
                 gap: 1rem;
-                margin-top: 1.5rem;
+            }
+            form.active {
+                display: flex;
             }
             label {
                 font-weight: 600;
@@ -75,43 +97,79 @@ def root() -> str:
                 border: 1px solid #cbd5f5;
                 font-size: 1rem;
             }
-            button {
-                padding: 0.75rem 1rem;
-                border-radius: 8px;
+            button[type="submit"] {
                 border: none;
+                border-radius: 8px;
+                padding: 0.75rem 1rem;
                 background: #2563eb;
-                color: #ffffff;
+                color: #fff;
                 font-weight: 600;
                 cursor: pointer;
                 transition: background 0.2s ease;
             }
-            button:hover {
+            button[type="submit"]:hover {
                 background: #1d4ed8;
             }
             small {
-                display: block;
                 text-align: center;
                 color: #64748b;
+                display: block;
                 margin-top: 1rem;
             }
         </style>
     </head>
     <body>
         <main>
-            <h1>Register</h1>
-            <form action="/api/register/" method="post">
+            <h1>Legacy Album</h1>
+            <nav>
+                <button id="registerTab" class="active" type="button">Register</button>
+                <button id="loginTab" type="button">Log in</button>
+            </nav>
+
+            <form id="registerForm" class="active" action="/api/register/" method="post">
                 <div>
-                    <label for="email">Email</label>
-                    <input id="email" name="email" type="email" required />
+                    <label for="reg-email">Email</label>
+                    <input id="reg-email" name="email" type="email" required />
                 </div>
                 <div>
-                    <label for="password">Password</label>
-                    <input id="password" name="password" type="password" minlength="6" required />
+                    <label for="reg-password">Password</label>
+                    <input id="reg-password" name="password" type="password" minlength="6" required />
                 </div>
                 <button type="submit">Create account</button>
+                <small>POSTS to <code>/api/register/</code></small>
             </form>
-            <small>POSTs to <code>/api/register/</code> and echoes the JSON response.</small>
+
+            <form id="loginForm" action="/api/login/" method="post">
+                <div>
+                    <label for="login-email">Email</label>
+                    <input id="login-email" name="email" type="email" required />
+                </div>
+                <div>
+                    <label for="login-password">Password</label>
+                    <input id="login-password" name="password" type="password" required />
+                </div>
+                <button type="submit">Sign in</button>
+                <small>POSTS to <code>/api/login/</code></small>
+            </form>
         </main>
+
+        <script>
+            const registerTab = document.getElementById("registerTab");
+            const loginTab = document.getElementById("loginTab");
+            const registerForm = document.getElementById("registerForm");
+            const loginForm = document.getElementById("loginForm");
+
+            function activate(mode) {
+                const isRegister = mode === "register";
+                registerTab.classList.toggle("active", isRegister);
+                loginTab.classList.toggle("active", !isRegister);
+                registerForm.classList.toggle("active", isRegister);
+                loginForm.classList.toggle("active", !isRegister);
+            }
+
+            registerTab.addEventListener("click", () => activate("register"));
+            loginTab.addEventListener("click", () => activate("login"));
+        </script>
     </body>
     </html>
     """
