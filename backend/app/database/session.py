@@ -1,23 +1,27 @@
+from pathlib import Path
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from app.core.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+from app.core.config import settings  # noqa: F401
 
 
-# SQLite file stored in project root
-DATABASE_URL = "sqlite:///./legacy_album.db"
+# Ensure the SQLite database lives in a writable location
+DATA_DIR = Path.home() / ".legacy_album"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = DATA_DIR / "legacy_album.db"
 
-# Engine connects SQLAlchemy to SQLite
+DATABASE_URL = f"sqlite:///{DB_PATH}"
+
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
 )
 
-# SessionLocal is a factory for database sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base is used by model classes to define tables
 Base = declarative_base()
 
-from contextlib import contextmanager
+
 def get_db():
     db = SessionLocal()
     try:

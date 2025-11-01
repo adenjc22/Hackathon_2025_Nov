@@ -7,27 +7,25 @@ from app.api.routes.uploads import router as uploads_router
 from app.api.routes.users import router as users_router
 from app.api.routes.auth import router as auth_router
 
-
-
 app = FastAPI(
     title="Legacy Album API",
     version="0.1.0",
     description="Phase 1: FastAPI app structure with CORS and base routes."
 )
 
-#@app.on_event("startup")
-#def ensure_schema() -> None:
-#    # Create tables if this is the first run; safe to call repeatedly.
-#    init_db()
+@app.on_event("startup")
+def ensure_schema() -> None:
+    # Create tables if this is the first run; safe to call repeatedly.
+    init_db()
 
-# # Allow requests from React
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+# Allow requests from React
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> str:
@@ -55,7 +53,7 @@ def root() -> str:
                 box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
             }
             h1 {
-                margin: 0 0 0.75rem;
+            margin: 0 0 0.75rem;
                 text-align: center;
                 color: #0f172a;
             }
@@ -83,7 +81,7 @@ def root() -> str:
                 display: none;
                 flex-direction: column;
                 gap: 1rem;
-            }
+                }
             form.active {
                 display: flex;
             }
@@ -111,7 +109,7 @@ def root() -> str:
                 background: #1d4ed8;
             }
             small {
-                text-align: center;
+            text-align: center;
                 color: #64748b;
                 display: block;
                 margin-top: 1rem;
@@ -120,26 +118,26 @@ def root() -> str:
     </head>
     <body>
         <main>
-            <h1>Legacy Album</h1>
+        <h1>Legacy Album</h1>
             <nav>
                 <button id="registerTab" class="active" type="button">Register</button>
                 <button id="loginTab" type="button">Log in</button>
             </nav>
 
-            <form id="registerForm" class="active" action="/api/register/" method="post">
+            <form id="registerForm" class="active" action="/api/auth/register" method="post">
                 <div>
-                    <label for="reg-email">Email</label>
+                <label for="reg-email">Email</label>
                     <input id="reg-email" name="email" type="email" required />
                 </div>
                 <div>
-                    <label for="reg-password">Password</label>
+                <label for="reg-password">Password</label>
                     <input id="reg-password" name="password" type="password" minlength="6" required />
                 </div>
                 <button type="submit">Create account</button>
-                <small>POSTS to <code>/api/register/</code></small>
+                <small>POSTS to <code>/api/auth/register</code></small>
             </form>
 
-            <form id="loginForm" action="/api/login/" method="post">
+            <form id="loginForm" action="/api/auth/login" method="post">
                 <div>
                     <label for="login-email">Email</label>
                     <input id="login-email" name="email" type="email" required />
@@ -149,9 +147,9 @@ def root() -> str:
                     <input id="login-password" name="password" type="password" required />
                 </div>
                 <button type="submit">Sign in</button>
-                <small>POSTS to <code>/api/login/</code></small>
+                <small>POSTS to <code>/api/auth/login</code></small>
             </form>
-        </main>
+            </main>
 
         <script>
             const registerTab = document.getElementById("registerTab");
@@ -173,8 +171,6 @@ def root() -> str:
     </body>
     </html>
     """
-
-
 
 # Include sub-routers
 app.include_router(health_router, prefix="/api/health", tags=["Health"])

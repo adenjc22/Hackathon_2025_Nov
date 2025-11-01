@@ -1,4 +1,3 @@
-# backend/app/api/routes/users.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import get_db
