@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Albums from "./pages/Albums";
 import SearchResults from "./pages/SearchResults";
 import Upload from "./pages/Upload";
+import People from "./pages/People";
 import { AuthProvider, useAuthCtx } from "./context/AuthContext";
 
 function Protected({ children }) {
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/upload" element={<Protected><Upload /></Protected>} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+              <Route path="/people" element={<Protected><People /></Protected>} />
               <Route path="/albums" element={<Protected><Albums /></Protected>} />
               <Route path="/search" element={<Protected><SearchResults /></Protected>} />
               <Route path="*" element={<Navigate to="/" replace />} />
