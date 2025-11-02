@@ -10,28 +10,65 @@ export function AuthProvider({ children }) {
   // Try restore session on mount
   useEffect(() => {
     (async () => {
-      try {
-        const { data } = await api.get("/api/users/me"); // implement on backend
-        setUser(data);
-      } catch (_) {} // not logged in
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        try {
+          // Set token in axios headers
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          const { data } = await api.get("/api/users/me");
+          setUser(data);
+        } catch (_) {
+          // Token invalid or expired
+          localStorage.removeItem("accessToken");
+          delete api.defaults.headers.common["Authorization"];
+        }
+      }
       setReady(true);
     })();
   }, []);
 
   const login = async (payload) => {
-    const { data } = await api.post("/api/auth/login", payload);
+    const formData = new FormData();
+    formData.append("email", payload.email);
+    formData.append("password", payload.password);
+    
+    const { data } = await api.post("/api/auth/login", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    
+    // Store token and set in axios headers
+    localStorage.setItem("accessToken", data.accessToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
+    
     setUser(data.user);
     return data.user;
   };
 
   const signup = async (payload) => {
-    const { data } = await api.post("/api/auth/signup", payload);
+    const formData = new FormData();
+    formData.append("email", payload.email);
+    formData.append("password", payload.password);
+    
+    const { data } = await api.post("/api/auth/register", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    
+    // Store token and set in axios headers
+    localStorage.setItem("accessToken", data.accessToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
+    
     setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
-    try { await api.post("/api/auth/logout"); } catch (_) {}
+    try {
+      await api.post("/api/auth/logout");
+    } catch (_) {}
+    
+    // Clear token from storage and axios headers
+    localStorage.removeItem("accessToken");
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
