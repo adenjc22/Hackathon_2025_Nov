@@ -23,17 +23,23 @@ def ensure_schema() -> None:
     # Create tables if this is the first run; safe to call repeatedly.
     init_db()
 
-# CORS configuration - TEMPORARY: Allow all origins for debugging
-# TODO: Restrict this after confirming it works
-print("[CORS] WARNING: Allowing ALL origins for debugging")
+# CORS configuration - Production ready
+FRONTEND_ORIGINS = [
+    "https://memory-lane.up.railway.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+print(f"[CORS] Configured origins: {FRONTEND_ORIGINS}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TEMPORARY - allow all
-    allow_credentials=False,  # Must be False with wildcard origins
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_origins=FRONTEND_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=600,  # Cache preflight for 10 minutes
 )
 
 @app.get("/", response_class=HTMLResponse)
