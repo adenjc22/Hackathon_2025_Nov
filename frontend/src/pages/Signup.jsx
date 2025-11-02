@@ -5,7 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 export default function Signup() {
   const nav = useNavigate();
   const { signup } = useAuth();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -33,17 +33,6 @@ export default function Signup() {
                       bg-brand-light border-gray-200
                       dark:bg-brand-dark dark:border-gray-700">
         <form onSubmit={onSubmit} className="space-y-3">
-          <label className="block">
-            <span className="sr-only">Name</span>
-            <input
-              className="input"
-              placeholder="Name"
-              autoComplete="name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </label>
-
           <label className="block">
             <span className="sr-only">Email</span>
             <input
