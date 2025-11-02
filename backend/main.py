@@ -9,6 +9,8 @@ from app.api.routes.uploads import router as uploads_router
 from app.api.routes.users import router as users_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.media import router as media_router
+from app.api.routes.ai_config import router as ai_config_router
+from app.api.routes.ai_process import router as ai_process_router
 
 app = FastAPI(
     title="Legacy Album API",
@@ -181,6 +183,8 @@ app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(media_router, tags=["Media"])
+app.include_router(ai_config_router, tags=["AI Configuration"])
+app.include_router(ai_process_router, tags=["AI Processing"])
 
 # Mount static files for uploaded media
 UPLOAD_DIR = Path("uploads")
