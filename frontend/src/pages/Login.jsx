@@ -16,7 +16,7 @@ export default function Login() {
     setErr("");
     try {
       await login(form);
-      nav(loc.state?.from?.pathname || "/dashboard", { replace: true });
+      nav(loc.state?.from?.pathname || "/upload", { replace: true });
     } catch (e2) {
       setErr(e2?.response?.data?.detail || e2.message);
     } finally {
