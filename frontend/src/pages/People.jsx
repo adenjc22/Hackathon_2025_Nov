@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../utils/api";
+import { api, API_BASE } from "../utils/api";
 import { FaUser, FaEdit, FaTrash, FaImages } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -92,9 +92,9 @@ export default function People() {
             >
               {/* Thumbnail */}
               <div className="aspect-square bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                {person.thumbnail_url ? (
+                  {person.thumbnail_url ? (
                   <img
-                    src={`http://localhost:8000${person.thumbnail_url}`}
+                    src={`${API_BASE || (import.meta.env.PROD ? 'https://memory-lane-backend.up.railway.app' : 'http://localhost:8000')}${person.thumbnail_url}`}
                     alt={person.name || "Unknown"}
                     className="w-full h-full object-cover"
                   />
