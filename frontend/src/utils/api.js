@@ -36,7 +36,7 @@ const getApiUrl = () => {
   return "http://localhost:8000";
 };
 
-const API_BASE = getApiUrl();
+export const API_BASE = getApiUrl();
 
 console.log("API_BASE URL (utils/api.js):", API_BASE); // Debug log
 

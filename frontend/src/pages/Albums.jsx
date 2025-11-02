@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAlbums, getAlbum, rebuildAlbums, deleteAlbum, createAlbum, createAlbumFromPrompt, getAllMedia } from "../utils/api";
+import { getAlbums, getAlbum, rebuildAlbums, deleteAlbum, createAlbum, createAlbumFromPrompt, getAllMedia, API_BASE } from "../utils/api";
 import Loader from "../components/Loader";
 
 export default function Albums() {
@@ -156,7 +156,8 @@ export default function Albums() {
   const getImageUrl = (url) => {
     if (!url) return "/placeholder.jpg";
     if (url.startsWith("http")) return url;
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    // Use normalized API base from utils/api.js
+    const apiBase = API_BASE || (import.meta.env.PROD ? "https://memory-lane-backend.up.railway.app" : "http://localhost:8000");
     return `${apiBase}${url}`;
   };
 
