@@ -105,9 +105,9 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }) {
                 transition-all duration-200
               "
             >
-              <option value="hybrid">🤖 Hybrid (AI + Keywords) - Recommended</option>
-              <option value="semantic">🧠 Semantic (AI Only)</option>
-              <option value="text">📝 Text (Keywords Only)</option>
+              <option value="hybrid">Hybrid (AI + Keywords) - Recommended</option>
+              <option value="semantic">Semantic (AI Only)</option>
+              <option value="text">Text (Keywords Only)</option>
             </select>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Hybrid combines AI understanding with keyword matching for best results
@@ -131,9 +131,9 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }) {
                 transition-all duration-200
               "
             >
-              <option value="relevance">⭐ Best Match</option>
-              <option value="newest">🕒 Newest First</option>
-              <option value="oldest">📅 Oldest First</option>
+              <option value="relevance">Best Match</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
             </select>
           </div>
 

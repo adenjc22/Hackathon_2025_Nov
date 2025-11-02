@@ -40,7 +40,7 @@ export default function Home() {
         <div className="rounded-xl border p-5 transition hover:border-brand-blue
                         bg-brand-light border-gray-200
                         dark:bg-brand-dark dark:border-gray-700">
-          <h3 className="font-semibold text-brand-blue mb-2">🏷️ Smart Tagging</h3>
+          <h3 className="font-semibold text-brand-blue mb-2">Smart Tagging</h3>
           <p className="text-sm text-gray-700 dark:text-gray-400">
             AI analyzes and tags photos with scenes, objects, and events for effortless searching.
           </p>
@@ -49,7 +49,7 @@ export default function Home() {
         <div className="rounded-xl border p-5 transition hover:border-brand-blue
                         bg-brand-light border-gray-200
                         dark:bg-brand-dark dark:border-gray-700">
-          <h3 className="font-semibold text-brand-blue mb-2">🔒 Family Archive</h3>
+          <h3 className="font-semibold text-brand-blue mb-2">Family Archive</h3>
           <p className="text-sm text-gray-700 dark:text-gray-400">
             Build a secure digital legacy that your family can treasure for generations to come.
           </p>

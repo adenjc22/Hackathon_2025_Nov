@@ -4,10 +4,11 @@ Search API Routes - Natural language search endpoints for Phase 4
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from pathlib import Path
+import os
 
 from app.database.session import get_db
 from app.services.search_service import SearchService
@@ -16,6 +17,22 @@ from loguru import logger
 
 
 router = APIRouter(tags=["Search"])
+
+
+def get_backend_url(request: Request) -> str:
+    """
+    Dynamically determine backend URL based on environment.
+    Priority: 
+    1. BACKEND_URL env var (for explicit override)
+    2. Request's base URL (auto-detects Railway/localhost)
+    """
+    # Check if BACKEND_URL is explicitly set
+    backend_url = os.getenv("BACKEND_URL")
+    if backend_url:
+        return backend_url
+    
+    # Auto-detect from request (works for both Railway and localhost)
+    return str(request.base_url).rstrip('/')
 
 
 # Request/Response Models
@@ -104,8 +121,9 @@ async def generate_embedding(
     )
 
 
-@router.get("/search", response_model=SearchResponse)
+@router.get("/", response_model=SearchResponse)
 async def search_media(
+    request: Request,
     query: str = Query(..., min_length=1, description="Natural language search query"),
     search_type: str = Query("hybrid", regex="^(semantic|text|hybrid)$", description="Search algorithm to use"),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
@@ -176,6 +194,7 @@ async def search_media(
         )
     
     # Format results
+    backend_url = get_backend_url(request)
     formatted_results = []
     for result in results:
         media = result["media"]
@@ -187,7 +206,7 @@ async def search_media(
                 tags=media.tags,
                 emotion=media.emotion,
                 has_people=media.has_people,
-                file_url=f"/uploads/{Path(media.stored_path).name}",
+                file_url=f"{backend_url}/uploads/{Path(media.stored_path).name}",
                 created_at=media.created_at,
                 score=result["score"],
                 match_type=result["match_type"]
@@ -205,9 +224,10 @@ async def search_media(
     )
 
 
-@router.get("/search/similar/{media_id}", response_model=RecommendationResponse)
+@router.get("/similar/{media_id}", response_model=RecommendationResponse)
 async def get_similar_media(
     media_id: int,
+    request: Request,
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
     limit: int = Query(10, ge=1, le=50, description="Maximum results"),
     db: Session = Depends(get_db)
@@ -239,6 +259,7 @@ async def get_similar_media(
         )
     
     # Format results
+    backend_url = get_backend_url(request)
     formatted_results = []
     for result in results:
         media = result["media"]
@@ -250,7 +271,7 @@ async def get_similar_media(
                 tags=media.tags,
                 emotion=media.emotion,
                 has_people=media.has_people,
-                file_url=f"/uploads/{Path(media.stored_path).name}",
+                file_url=f"{backend_url}/uploads/{Path(media.stored_path).name}",
                 created_at=media.created_at,
                 score=result["score"],
                 match_type=result["match_type"]
@@ -264,7 +285,7 @@ async def get_similar_media(
     )
 
 
-@router.post("/search/reindex")
+@router.post("/reindex")
 async def reindex_media(
     user_id: Optional[int] = Query(None, description="Reindex specific user's media only"),
     force: bool = Query(False, description="Force reindex even if embeddings exist"),
