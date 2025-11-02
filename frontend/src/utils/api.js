@@ -3,9 +3,31 @@ import axios from "axios";
 
 const USE_MSW = import.meta.env.VITE_USE_MSW === "true";
 
+// Determine API URL based on environment
+const getApiUrl = () => {
+  if (USE_MSW) return "";
+  
+  // If VITE_API_URL is set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In production (Railway), use the production backend
+  if (import.meta.env.PROD) {
+    return "https://memory-lane-backend.up.railway.app";
+  }
+  
+  // In development, use localhost
+  return "http://localhost:8000";
+};
+
+const API_BASE = getApiUrl();
+
+console.log("API_BASE URL (utils/api.js):", API_BASE); // Debug log
+
 export const api = axios.create({
-  baseURL: USE_MSW ? "" : (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"),
-  withCredentials: false,  // Temporarily disabled for CORS debugging
+  baseURL: API_BASE,
+  withCredentials: true,
 });
 
 // Add token from localStorage to requests automatically
