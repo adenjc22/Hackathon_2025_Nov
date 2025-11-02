@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from app.services import storage
 from app.database.models_media import Media 
 from app.database.session import get_db
+from app.core.dependencies import get_current_user
+from app.database.models_user import User
 # Note: we define a local MediaRead (below) so we don't need to import the project's
 # schema here. Importing it earlier caused a name collision and unexpected behavior.
 
@@ -40,7 +42,11 @@ class MediaRead(MediaBase):
 
 
 @router.post("/", response_model=MediaRead)
-async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_media(
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Save an uploaded file to disk (using app.services.storage) and return metadata.
 
     Note: This endpoint intentionally does not require the DB layer. If you want to
@@ -60,7 +66,7 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
 
     # Use the existing storage service to save the file
     ext = Path(file.filename).suffix or ".bin"
-    owner_id = None
+    owner_id = current_user.id  # Set the owner to the current logged-in user
     dest_path = storage.save_upload(file, contents, owner_id)
     metadata = storage.extract_metadata(dest_path)
 
@@ -88,10 +94,14 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
 
 
 @router.get("/", response_model=List[MediaRead])
-async def list_media(db: Session = Depends(get_db)):
-    """Retrieve all uploaded media."""
+async def list_media(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve all uploaded media for the current user."""
     backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
-    media_items = db.query(Media).order_by(Media.created_at.desc()).all()
+    # Filter media by the current user's ID
+    media_items = db.query(Media).filter(Media.owner_id == current_user.id).order_by(Media.created_at.desc()).all()
     results = []
     for item in media_items:
         media_read = MediaRead.from_orm(item)
@@ -101,12 +111,20 @@ async def list_media(db: Session = Depends(get_db)):
 
 
 @router.delete("/{media_id}")
-async def delete_media(media_id: int, db: Session = Depends(get_db)):
+async def delete_media(
+    media_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Delete a media item and its file."""
     media_item = db.query(Media).filter(Media.id == media_id).first()
     
     if not media_item:
         raise HTTPException(status_code=404, detail="Media not found")
+    
+    # Ensure the user owns this media
+    if media_item.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this media")
     
     # Delete the file from disk
     file_path = Path(media_item.stored_path)
