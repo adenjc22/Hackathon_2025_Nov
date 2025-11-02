@@ -14,12 +14,13 @@ export default function UploadForm({ onComplete }) {
     setErr("");
     
     try {
-      // Upload each file individually
+      // Upload each file individually with extended timeout
       for (const file of files) {
         const fd = new FormData();
         fd.append("file", file);
         await api.post("/api/upload/media/", fd, {
           headers: { "Content-Type": "multipart/form-data" },
+          timeout: 120000, // 2 minutes per file to allow for AI processing
         });
       }
       onComplete?.();

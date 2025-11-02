@@ -7,7 +7,7 @@ import uuid
 import os
 from sqlalchemy.orm import Session
 from app.services import storage
-from app.database.models_media import Media 
+from app.database.models_media import Media, ProcessingStatus
 from app.database.session import get_db
 from app.core.dependencies import get_current_user
 from app.database.models_user import User
@@ -36,6 +36,11 @@ class MediaRead(MediaBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     file_url: Optional[str] = None
+    status: Optional[str] = None
+    tags: Optional[List[str]] = None
+    emotion: Optional[dict] = None
+    caption: Optional[str] = None
+    error_message: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -79,6 +84,7 @@ async def upload_media(
         size_bytes=metadata.get("size_bytes", len(contents)),
         metadata_json=metadata,
         owner_id=owner_id,
+        status=ProcessingStatus.PENDING,  # Set initial status
     )
 
     db.add(media_row)
@@ -136,3 +142,20 @@ async def delete_media(
     db.commit()
     
     return {"message": "Media deleted successfully"}
+
+
+@router.get("/status/{media_id}", response_model=MediaRead)
+async def get_media_status(media_id: int, db: Session = Depends(get_db)):
+    """
+    Get the processing status and AI results for a media item.
+    Frontend can poll this endpoint to track processing progress.
+    """
+    media_item = db.query(Media).filter(Media.id == media_id).first()
+    
+    if not media_item:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    response = MediaRead.from_orm(media_item)
+    response.file_url = f"/uploads/{Path(media_item.stored_path).name}"
+    
+    return response
