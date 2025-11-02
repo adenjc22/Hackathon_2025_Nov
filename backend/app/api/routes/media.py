@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pathlib import Path
 import uuid
+import os
 from sqlalchemy.orm import Session
 from app.services import storage
 from app.database.models_media import Media 
@@ -78,9 +79,10 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
     db.commit()
     db.refresh(media_row)
 
-    # Build the response with file URL
+    # Build the response with FULL file URL (including backend domain)
+    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
     response = MediaRead.from_orm(media_row)
-    response.file_url = f"/uploads/{Path(media_row.stored_path).name}"
+    response.file_url = f"{backend_url}/uploads/{Path(media_row.stored_path).name}"
     
     return response
 
@@ -88,11 +90,12 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
 @router.get("/", response_model=List[MediaRead])
 async def list_media(db: Session = Depends(get_db)):
     """Retrieve all uploaded media."""
+    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
     media_items = db.query(Media).order_by(Media.created_at.desc()).all()
     results = []
     for item in media_items:
         media_read = MediaRead.from_orm(item)
-        media_read.file_url = f"/uploads/{Path(item.stored_path).name}"
+        media_read.file_url = f"{backend_url}/uploads/{Path(item.stored_path).name}"
         results.append(media_read)
     return results
 
