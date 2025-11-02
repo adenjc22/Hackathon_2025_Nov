@@ -24,25 +24,23 @@ def ensure_schema() -> None:
     # Create tables if this is the first run; safe to call repeatedly.
     init_db()
 
-# CORS configuration - supports both development and production
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-allowed_origins = [FRONTEND_URL]
+# CORS configuration - Production ready
+FRONTEND_ORIGINS = [
+    "https://memory-lane.up.railway.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
-# In development, also allow localhost variations
-if "localhost" in FRONTEND_URL or "127.0.0.1" in FRONTEND_URL:
-    allowed_origins.extend([
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-    ])
+print(f"[CORS] Configured origins: {FRONTEND_ORIGINS}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=FRONTEND_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=600,  # Cache preflight for 10 minutes
 )
 
 @app.get("/", response_class=HTMLResponse)

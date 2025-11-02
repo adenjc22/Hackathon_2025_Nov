@@ -4,21 +4,13 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pathlib import Path
 import uuid
+import os
 from sqlalchemy.orm import Session
 from app.services import storage
 from app.database.models_media import Media, ProcessingStatus
 from app.database.session import get_db
-from loguru import logger
-
-# Import AI pipeline - use try/except to handle when Celery is not available
-try:
-    from app.ai_pipeline import process_media_task, process_media_sync
-    CELERY_AVAILABLE = True
-except Exception as e:
-    logger.warning(f"Celery not available: {e}")
-    CELERY_AVAILABLE = False
-    process_media_sync = None
-
+from app.core.dependencies import get_current_user
+from app.database.models_user import User
 # Note: we define a local MediaRead (below) so we don't need to import the project's
 # schema here. Importing it earlier caused a name collision and unexpected behavior.
 
@@ -55,7 +47,11 @@ class MediaRead(MediaBase):
 
 
 @router.post("/", response_model=MediaRead)
-async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_media(
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Save an uploaded file to disk (using app.services.storage) and return metadata.
 
     Note: This endpoint intentionally does not require the DB layer. If you want to
@@ -75,7 +71,7 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
 
     # Use the existing storage service to save the file
     ext = Path(file.filename).suffix or ".bin"
-    owner_id = None
+    owner_id = current_user.id  # Set the owner to the current logged-in user
     dest_path = storage.save_upload(file, contents, owner_id)
     metadata = storage.extract_metadata(dest_path)
 
@@ -95,51 +91,46 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
     db.commit()
     db.refresh(media_row)
 
-    # Trigger AI processing pipeline
-    # For now, process synchronously to ensure it works
-    # TODO: Make this async with proper Celery/Redis setup
-    try:
-        logger.info(f"Starting AI processing for media {media_row.id}")
-        # Import here to avoid circular imports
-        from app.ai_pipeline import process_media_sync
-        from app.database.models_user import User  # Ensure User is imported
-        
-        # Process synchronously - this will block but ensures it works
-        process_media_sync(media_row.id, str(dest_path))
-        logger.info("Processing complete")
-        
-        # Refresh media_row to get updated data
-        db.refresh(media_row)
-    except Exception as e:
-        logger.error(f"Failed to process media: {str(e)}")
-        # Don't fail the upload if processing fails
-
-    # Build the response with file URL
+    # Build the response with FULL file URL (including backend domain)
+    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
     response = MediaRead.from_orm(media_row)
-    response.file_url = f"/uploads/{Path(media_row.stored_path).name}"
+    response.file_url = f"{backend_url}/uploads/{Path(media_row.stored_path).name}"
     
     return response
 
 
 @router.get("/", response_model=List[MediaRead])
-async def list_media(db: Session = Depends(get_db)):
-    """Retrieve all uploaded media."""
-    media_items = db.query(Media).order_by(Media.created_at.desc()).all()
+async def list_media(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve all uploaded media for the current user."""
+    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
+    # Filter media by the current user's ID
+    media_items = db.query(Media).filter(Media.owner_id == current_user.id).order_by(Media.created_at.desc()).all()
     results = []
     for item in media_items:
         media_read = MediaRead.from_orm(item)
-        media_read.file_url = f"/uploads/{Path(item.stored_path).name}"
+        media_read.file_url = f"{backend_url}/uploads/{Path(item.stored_path).name}"
         results.append(media_read)
     return results
 
 
 @router.delete("/{media_id}")
-async def delete_media(media_id: int, db: Session = Depends(get_db)):
+async def delete_media(
+    media_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Delete a media item and its file."""
     media_item = db.query(Media).filter(Media.id == media_id).first()
     
     if not media_item:
         raise HTTPException(status_code=404, detail="Media not found")
+    
+    # Ensure the user owns this media
+    if media_item.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this media")
     
     # Delete the file from disk
     file_path = Path(media_item.stored_path)

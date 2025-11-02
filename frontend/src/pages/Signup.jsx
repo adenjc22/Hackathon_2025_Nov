@@ -15,7 +15,7 @@ export default function Signup() {
     setErr("");
     try {
       await signup(form);
-      nav("/upload", { replace: true });
+      nav("/dashboard", { replace: true });
     } catch (e2) {
       setErr(e2?.response?.data?.detail || e2.message);
     } finally {
