@@ -7,7 +7,6 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Albums from "./pages/Albums";
 import SearchResults from "./pages/SearchResults";
-import Upload from "./pages/Upload";
 import People from "./pages/People";
 import { AuthProvider, useAuthCtx } from "./context/AuthContext";
 
@@ -31,7 +30,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/upload" element={<Protected><Upload /></Protected>} />
+              <Route path="/upload" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
               <Route path="/people" element={<Protected><People /></Protected>} />
               <Route path="/albums" element={<Protected><Albums /></Protected>} />
