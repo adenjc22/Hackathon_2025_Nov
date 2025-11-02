@@ -27,7 +27,7 @@ console.log("API_BASE URL (utils/api.js):", API_BASE); // Debug log
 
 export const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,
+  withCredentials: false,  // TEMPORARY: Disabled for wildcard CORS testing
 });
 
 // Add token from localStorage to requests automatically
