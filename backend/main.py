@@ -15,19 +15,26 @@ app = FastAPI(
     description="Phase 1: FastAPI app structure with CORS and base routes."
 )
 
-#@app.on_event("startup")
-#def ensure_schema() -> None:
-#    # Create tables if this is the first run; safe to call repeatedly.
-#    init_db()
+@app.on_event("startup")
+def ensure_schema() -> None:
+    # Create tables if this is the first run; safe to call repeatedly.
+    init_db()
 
-# # Allow requests from React
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+# Allow requests from React
+# ✅ correct — call it, don’t decorate
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> str:
