@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pathlib import Path
@@ -32,6 +32,7 @@ class MediaRead(MediaBase):
     owner_id: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    file_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -77,5 +78,40 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
     db.commit()
     db.refresh(media_row)
 
-    # Return a response model using ORM mode
-    return MediaRead.from_orm(media_row)
+    # Build the response with file URL
+    response = MediaRead.from_orm(media_row)
+    response.file_url = f"/uploads/{Path(media_row.stored_path).name}"
+    
+    return response
+
+
+@router.get("/", response_model=List[MediaRead])
+async def list_media(db: Session = Depends(get_db)):
+    """Retrieve all uploaded media."""
+    media_items = db.query(Media).order_by(Media.created_at.desc()).all()
+    results = []
+    for item in media_items:
+        media_read = MediaRead.from_orm(item)
+        media_read.file_url = f"/uploads/{Path(item.stored_path).name}"
+        results.append(media_read)
+    return results
+
+
+@router.delete("/{media_id}")
+async def delete_media(media_id: int, db: Session = Depends(get_db)):
+    """Delete a media item and its file."""
+    media_item = db.query(Media).filter(Media.id == media_id).first()
+    
+    if not media_item:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    # Delete the file from disk
+    file_path = Path(media_item.stored_path)
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete from database
+    db.delete(media_item)
+    db.commit()
+    
+    return {"message": "Media deleted successfully"}

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from app.database.init_database import init_db
 from app.api.routes.health import router as health_router
 from app.api.routes.uploads import router as uploads_router
@@ -179,3 +181,8 @@ app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(media_router, tags=["Media"])
+
+# Mount static files for uploaded media
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

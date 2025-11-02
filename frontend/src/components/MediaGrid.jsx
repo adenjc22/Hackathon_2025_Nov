@@ -11,7 +11,7 @@ export default function MediaGrid({ items, onDelete }) {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/api/upload/media/${id}`).catch(() => {});
+      await api.delete(`/media/${id}`).catch(() => {});
       onDelete?.(id);
     } catch (e) {
       console.error("Delete failed:", e);

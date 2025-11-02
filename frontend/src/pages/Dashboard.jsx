@@ -11,9 +11,18 @@ export default function Dashboard() {
 
   const load = async () => {
     try {
-      const { data } = await api.get("/api/upload/media");
-      setItems(data || []);
-      setPoll(data?.some((m) => m.status !== "done"));
+      const { data } = await api.get("/media/");
+      // Transform the backend response to match MediaGrid's expected format
+      const transformedData = data.map((item) => ({
+        id: item.id,
+        fileName: item.filename,
+        fileUrl: `http://localhost:8000${item.file_url}`,
+        mimeType: item.mime_type,
+        status: "done", // Since we're not processing, mark as done
+        createdAt: item.created_at,
+      }));
+      setItems(transformedData || []);
+      setPoll(false); // No need to poll since we're not doing background processing
     } catch (err) {
       console.error("Failed to load media:", err);
     }
