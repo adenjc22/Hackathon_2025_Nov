@@ -25,27 +25,26 @@ def ensure_schema() -> None:
 
 # CORS configuration - supports both development and production
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-allowed_origins = [FRONTEND_URL]
 
-# In development, also allow localhost variations
-if "localhost" in FRONTEND_URL or "127.0.0.1" in FRONTEND_URL:
-    allowed_origins.extend([
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-    ])
+# Build allowed origins list
+allowed_origins = [
+    "https://memory-lane.up.railway.app",  # Production frontend
+    "http://localhost:5173",                # Local development
+    "http://127.0.0.1:5173",
+]
 
-# Always allow Railway production frontend
-if "https://memory-lane.up.railway.app" not in allowed_origins:
-    allowed_origins.append("https://memory-lane.up.railway.app")
+# Add FRONTEND_URL if it's different
+if FRONTEND_URL not in allowed_origins:
+    allowed_origins.append(FRONTEND_URL)
 
 print(f"[CORS] Allowed origins: {allowed_origins}")
+print(f"[CORS] FRONTEND_URL from env: {FRONTEND_URL}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
