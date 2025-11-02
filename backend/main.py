@@ -3,12 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+import os
 from app.database.init_database import init_db
 from app.api.routes.health import router as health_router
 from app.api.routes.uploads import router as uploads_router
 from app.api.routes.users import router as users_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.media import router as media_router
+from app.api.routes.people import router as people_router
 
 app = FastAPI(
     title="Legacy Album API",
@@ -21,11 +23,22 @@ def ensure_schema() -> None:
     # Create tables if this is the first run; safe to call repeatedly.
     init_db()
 
-# Allow requests from React - Using wildcard for development
+# CORS configuration - supports both development and production
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+allowed_origins = [FRONTEND_URL]
+
+# In development, also allow localhost variations
+if "localhost" in FRONTEND_URL or "127.0.0.1" in FRONTEND_URL:
+    allowed_origins.extend([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=False,  # Must be False when using wildcard origins
+    allow_origins=allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -182,6 +195,7 @@ app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(media_router, prefix="/api/upload/media", tags=["Media"])
+app.include_router(people_router, prefix="/api", tags=["People"])
 
 # Mount static files for uploaded media
 UPLOAD_DIR = Path("uploads")

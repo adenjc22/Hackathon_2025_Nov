@@ -54,7 +54,7 @@ export default function Navbar() {
             to="/"
             className="text-2xl font-bold text-brand-blue hover:text-[#33ccff] transition-colors tracking-wide"
           >
-            Legacy Album
+            Memory Lane
           </Link>
 
           {user && (
@@ -64,6 +64,12 @@ export default function Navbar() {
                 className="text-base text-gray-800 hover:text-brand-blue transition dark:text-gray-300"
               >
                 Dashboard
+              </Link>
+              <Link
+                to="/people"
+                className="text-base text-gray-800 hover:text-brand-blue transition dark:text-gray-300"
+              >
+                People
               </Link>
               <Link
                 to="/albums"
