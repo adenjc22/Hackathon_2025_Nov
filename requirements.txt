@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 SQLAlchemy
@@ -23,7 +22,7 @@ loguru
 httpx
 psycopg2-binary
 alembic
-=======
+
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
 sqlalchemy==2.0.35
@@ -51,4 +50,3 @@ pgvector==0.3.5
 alembic==1.13.3
 numpy==1.26.4
 torch==2.5.1
->>>>>>> f3fded8fa24db6078ca24e84e18bb276abe04a3a
