@@ -14,7 +14,7 @@ Pillow
 opencv-python
 transformers
 sentence-transformers
-openai>=1.0.0
+openai
 requests
 pytest
 python-dotenv
