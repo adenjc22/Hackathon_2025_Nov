@@ -35,6 +35,12 @@ if "localhost" in FRONTEND_URL or "127.0.0.1" in FRONTEND_URL:
         "http://localhost:3000",
     ])
 
+# Always allow Railway production frontend
+if "https://memory-lane.up.railway.app" not in allowed_origins:
+    allowed_origins.append("https://memory-lane.up.railway.app")
+
+print(f"[CORS] Allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
