@@ -6,8 +6,19 @@ from pathlib import Path
 import uuid
 from sqlalchemy.orm import Session
 from app.services import storage
-from app.database.models_media import Media 
+from app.database.models_media import Media, ProcessingStatus
 from app.database.session import get_db
+from loguru import logger
+
+# Import AI pipeline - use try/except to handle when Celery is not available
+try:
+    from app.ai_pipeline import process_media_task, process_media_sync
+    CELERY_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"Celery not available: {e}")
+    CELERY_AVAILABLE = False
+    process_media_sync = None
+
 # Note: we define a local MediaRead (below) so we don't need to import the project's
 # schema here. Importing it earlier caused a name collision and unexpected behavior.
 
@@ -33,6 +44,11 @@ class MediaRead(MediaBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     file_url: Optional[str] = None
+    status: Optional[str] = None
+    tags: Optional[List[str]] = None
+    emotion: Optional[dict] = None
+    caption: Optional[str] = None
+    error_message: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -72,11 +88,31 @@ async def upload_media(file: UploadFile = File(...), db: Session = Depends(get_d
         size_bytes=metadata.get("size_bytes", len(contents)),
         metadata_json=metadata,
         owner_id=owner_id,
+        status=ProcessingStatus.PENDING,  # Set initial status
     )
 
     db.add(media_row)
     db.commit()
     db.refresh(media_row)
+
+    # Trigger AI processing pipeline
+    # For now, process synchronously to ensure it works
+    # TODO: Make this async with proper Celery/Redis setup
+    try:
+        logger.info(f"Starting AI processing for media {media_row.id}")
+        # Import here to avoid circular imports
+        from app.ai_pipeline import process_media_sync
+        from app.database.models_user import User  # Ensure User is imported
+        
+        # Process synchronously - this will block but ensures it works
+        process_media_sync(media_row.id, str(dest_path))
+        logger.info("Processing complete")
+        
+        # Refresh media_row to get updated data
+        db.refresh(media_row)
+    except Exception as e:
+        logger.error(f"Failed to process media: {str(e)}")
+        # Don't fail the upload if processing fails
 
     # Build the response with file URL
     response = MediaRead.from_orm(media_row)
@@ -115,3 +151,20 @@ async def delete_media(media_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Media deleted successfully"}
+
+
+@router.get("/status/{media_id}", response_model=MediaRead)
+async def get_media_status(media_id: int, db: Session = Depends(get_db)):
+    """
+    Get the processing status and AI results for a media item.
+    Frontend can poll this endpoint to track processing progress.
+    """
+    media_item = db.query(Media).filter(Media.id == media_id).first()
+    
+    if not media_item:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    response = MediaRead.from_orm(media_item)
+    response.file_url = f"/uploads/{Path(media_item.stored_path).name}"
+    
+    return response
