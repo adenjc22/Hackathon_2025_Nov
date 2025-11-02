@@ -35,3 +35,87 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
+
+// ============================================
+// Search API Functions
+// ============================================
+
+/**
+ * Search media with natural language query
+ * @param {string} query - Search query
+ * @param {Object} options - Search options
+ * @returns {Promise<Object>} Search results
+ */
+export async function searchMedia(query, options = {}) {
+  const params = new URLSearchParams({
+    query: query.trim(),
+    search_type: options.searchType || "hybrid",
+    limit: options.limit || 20,
+    offset: options.offset || 0,
+  });
+
+  // Add optional filters
+  if (options.hasPeople !== undefined && options.hasPeople !== null) {
+    params.append("has_people", options.hasPeople);
+  }
+  if (options.dateFrom) {
+    params.append("date_from", options.dateFrom);
+  }
+  if (options.dateTo) {
+    params.append("date_to", options.dateTo);
+  }
+  if (options.userId) {
+    params.append("user_id", options.userId);
+  }
+
+  const response = await api.get(`/api/search?${params.toString()}`);
+  return response.data;
+}
+
+/**
+ * Get similar media based on a reference photo
+ * @param {number} mediaId - Reference media ID
+ * @param {Object} options - Options
+ * @returns {Promise<Object>} Similar media results
+ */
+export async function getSimilarMedia(mediaId, options = {}) {
+  const params = new URLSearchParams({
+    limit: options.limit || 10,
+  });
+
+  if (options.userId) {
+    params.append("user_id", options.userId);
+  }
+
+  const response = await api.get(`/api/search/similar/${mediaId}?${params.toString()}`);
+  return response.data;
+}
+
+/**
+ * Generate embedding for text
+ * @param {string} text - Text to embed
+ * @returns {Promise<Object>} Embedding data
+ */
+export async function generateEmbedding(text) {
+  const response = await api.post("/api/embeddings", { text });
+  return response.data;
+}
+
+/**
+ * Reindex media embeddings
+ * @param {Object} options - Reindex options
+ * @returns {Promise<Object>} Reindex results
+ */
+export async function reindexMedia(options = {}) {
+  const params = new URLSearchParams();
+  
+  if (options.userId) {
+    params.append("user_id", options.userId);
+  }
+  if (options.force) {
+    params.append("force", "true");
+  }
+
+  const response = await api.post(`/api/search/reindex?${params.toString()}`);
+  return response.data;
+}
