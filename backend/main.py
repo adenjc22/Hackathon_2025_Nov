@@ -21,13 +21,14 @@ def ensure_schema() -> None:
     # Create tables if this is the first run; safe to call repeatedly.
     init_db()
 
-# Allow requests from React
+# Allow requests from React - Using wildcard for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=False,  # Must be False when using wildcard origins
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 @app.get("/", response_class=HTMLResponse)

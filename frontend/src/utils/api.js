@@ -5,7 +5,7 @@ const USE_MSW = import.meta.env.VITE_USE_MSW === "true";
 
 export const api = axios.create({
   baseURL: USE_MSW ? "" : (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"),
-  withCredentials: true,
+  withCredentials: false,  // Temporarily disabled for CORS debugging
 });
 
 // Add token from localStorage to requests automatically
