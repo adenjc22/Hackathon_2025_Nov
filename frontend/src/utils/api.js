@@ -141,3 +141,137 @@ export async function reindexMedia(options = {}) {
   const response = await api.post(`/api/search/reindex?${params.toString()}`);
   return response.data;
 }
+
+// ============================================
+// Albums API Functions
+// ============================================
+
+/**
+ * Get all albums for current user
+ * @param {Object} options - Query options
+ * @returns {Promise<Array>} List of albums
+ */
+export async function getAlbums(options = {}) {
+  const params = new URLSearchParams();
+  
+  if (options.autoOnly !== undefined) {
+    params.append("auto_only", options.autoOnly);
+  }
+  if (options.limit) {
+    params.append("limit", options.limit);
+  }
+  if (options.offset) {
+    params.append("offset", options.offset);
+  }
+
+  const response = await api.get(`/api/albums?${params.toString()}`);
+  return response.data;
+}
+
+/**
+ * Get a single album by ID
+ * @param {number} albumId - Album ID
+ * @returns {Promise<Object>} Album details
+ */
+export async function getAlbum(albumId) {
+  const response = await api.get(`/api/albums/${albumId}`);
+  return response.data;
+}
+
+/**
+ * Create a new album
+ * @param {Object} albumData - Album data
+ * @returns {Promise<Object>} Created album
+ */
+export async function createAlbum(albumData) {
+  const response = await api.post("/api/albums", albumData);
+  return response.data;
+}
+
+/**
+ * Create an album from a natural language prompt
+ * @param {Object} promptData - { prompt: string, title?: string }
+ * @returns {Promise<Object>} Created album with matched photos
+ */
+export async function createAlbumFromPrompt(promptData) {
+  const response = await api.post("/api/albums/create-from-prompt", promptData);
+  return response.data;
+}
+
+/**
+ * Update an existing album
+ * @param {number} albumId - Album ID
+ * @param {Object} albumData - Updated album data
+ * @returns {Promise<Object>} Updated album
+ */
+export async function updateAlbum(albumId, albumData) {
+  const response = await api.put(`/api/albums/${albumId}`, albumData);
+  return response.data;
+}
+
+/**
+ * Delete an album
+ * @param {number} albumId - Album ID
+ * @returns {Promise<Object>} Deletion result
+ */
+export async function deleteAlbum(albumId) {
+  const response = await api.delete(`/api/albums/${albumId}`);
+  return response.data;
+}
+
+/**
+ * Get album suggestions for a media item
+ * @param {number} mediaId - Media ID
+ * @returns {Promise<Array>} Suggested albums
+ */
+export async function getAlbumSuggestions(mediaId) {
+  const response = await api.get(`/api/albums/suggestions/${mediaId}`);
+  return response.data;
+}
+
+/**
+ * Regenerate album description
+ * @param {number} albumId - Album ID
+ * @returns {Promise<Object>} Updated album
+ */
+export async function regenerateAlbumDescription(albumId) {
+  const response = await api.post(`/api/albums/${albumId}/regenerate-description`);
+  return response.data;
+}
+
+/**
+ * Rebuild all albums
+ * @param {boolean} force - Force rebuild even if albums exist
+ * @returns {Promise<Object>} Rebuild results
+ */
+export async function rebuildAlbums(force = false) {
+  const params = new URLSearchParams();
+  if (force) {
+    params.append("force", "true");
+  }
+  
+  const response = await api.post(`/api/albums/rebuild?${params.toString()}`);
+  return response.data;
+}
+
+/**
+ * Add photos to an existing album
+ * @param {number} albumId - Album ID
+ * @param {Array<number>} mediaIds - List of media IDs to add
+ * @returns {Promise<Object>} Result
+ */
+export async function addPhotosToAlbum(albumId, mediaIds) {
+  const response = await api.post(`/api/albums/${albumId}/add-photos`, {
+    media_ids: mediaIds
+  });
+  return response.data;
+}
+
+/**
+ * Get all media for the current user
+ * @returns {Promise<Array>} List of media items
+ */
+export async function getAllMedia() {
+  const response = await api.get("/api/upload/media");
+  return response.data;
+}

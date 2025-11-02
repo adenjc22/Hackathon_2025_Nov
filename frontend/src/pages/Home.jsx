@@ -31,7 +31,7 @@ export default function Home() {
         <div className="rounded-xl border p-5 transition hover:border-brand-blue
                         bg-brand-light border-gray-200
                         dark:bg-brand-dark dark:border-gray-700">
-          <h3 className="font-semibold text-brand-blue mb-2">👥 Facial Recognition</h3>
+          <h3 className="font-semibold text-brand-blue mb-2"> Facial Recognition</h3>
           <p className="text-sm text-gray-700 dark:text-gray-400">
             Automatically identify and group family members across your entire photo collection.
           </p>

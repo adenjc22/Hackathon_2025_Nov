@@ -23,7 +23,7 @@ def get_db():
     try:
         return db
     finally:
-        pass  # Don't close here, caller is responsible
+        pass  
 
 
 @celery_app.task(bind=True, name="process_media_task")
@@ -149,6 +149,11 @@ def process_media_task(self, media_id: int, file_path: str):
         db.refresh(media)
         
         logger.info(f"✅ Successfully processed media {media_id}")
+        
+        # NOTE: We do NOT auto-create albums during upload anymore.
+        # Albums are only created when:
+        # 1. User explicitly creates one manually  
+        # 2. User uses AI search mode (create-from-prompt)
         
         return {
             "media_id": media_id,

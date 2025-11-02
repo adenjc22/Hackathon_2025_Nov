@@ -12,13 +12,22 @@ export default function Login() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!form.email || !form.password) {
+      setErr("Please enter both email and password");
+      return;
+    }
+    
     setBusy(true);
     setErr("");
     try {
       await login(form);
       nav(loc.state?.from?.pathname || "/dashboard", { replace: true });
     } catch (e2) {
-      setErr(e2?.response?.data?.detail || e2.message);
+      console.error("Login error details:", e2);
+      const errorMsg = e2?.response?.data?.detail || e2?.message || "Login failed. Please try again.";
+      setErr(errorMsg);
     } finally {
       setBusy(false);
     }
@@ -38,8 +47,10 @@ export default function Login() {
             <span className="sr-only">Email</span>
             <input
               className="input"
+              type="email"
               placeholder="Email"
               autoComplete="email"
+              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
@@ -52,6 +63,8 @@ export default function Login() {
               className="input"
               placeholder="Password"
               autoComplete="current-password"
+              required
+              minLength={6}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
