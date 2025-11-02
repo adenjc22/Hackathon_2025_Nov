@@ -16,7 +16,7 @@ export default function Dashboard() {
       const transformedData = data.map((item) => ({
         id: item.id,
         fileName: item.filename,
-        fileUrl: `http://localhost:8000${item.file_url}`,
+        fileUrl: item.file_url, // Backend now returns full URL
         mimeType: item.mime_type,
         status: "done", // Since we're not processing, mark as done
         createdAt: item.created_at,
