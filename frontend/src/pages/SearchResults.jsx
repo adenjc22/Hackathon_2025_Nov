@@ -279,7 +279,7 @@ export default function SearchResults() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left max-w-3xl mx-auto">
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
                 <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  💡 Example Searches
+                  Example Searches
                 </h4>
                 <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>• "happy moments with friends"</li>
@@ -289,7 +289,7 @@ export default function SearchResults() {
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
                 <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  🎯 Use Filters
+                  Use Filters
                 </h4>
                 <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>• Filter by date range</li>
@@ -299,7 +299,7 @@ export default function SearchResults() {
               </div>
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
                 <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  🤖 AI-Powered
+                  AI-Powered
                 </h4>
                 <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>• Understands context</li>
