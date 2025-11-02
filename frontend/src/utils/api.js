@@ -3,21 +3,36 @@ import axios from "axios";
 
 const USE_MSW = import.meta.env.VITE_USE_MSW === "true";
 
-// Determine API URL based on environment
+// Normalize and determine API URL based on environment
+const normalizeUrlForPage = (url) => {
+  if (!url) return url;
+  try {
+    // If page is served over HTTPS, upgrade any http:// API url to https://
+    if (typeof location !== "undefined" && location.protocol === "https:") {
+      if (url.startsWith("http://")) {
+        return url.replace(/^http:\/\//i, "https://");
+      }
+    }
+  } catch (e) {
+    // location may be undefined in some build-time contexts; ignore
+  }
+  return url;
+};
+
 const getApiUrl = () => {
   if (USE_MSW) return "";
-  
-  // If VITE_API_URL is set, use it
+
+  // If VITE_API_URL is set, use it (but normalize to avoid mixed-content)
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+    return normalizeUrlForPage(import.meta.env.VITE_API_URL);
   }
-  
-  // In production (Railway), use the production backend
+
+  // In production (Railway), use the production backend (HTTPS)
   if (import.meta.env.PROD) {
     return "https://memory-lane-backend.up.railway.app";
   }
-  
-  // In development, use localhost
+
+  // In development, use localhost (HTTP)
   return "http://localhost:8000";
 };
 
