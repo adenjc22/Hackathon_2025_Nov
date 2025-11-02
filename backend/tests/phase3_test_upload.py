@@ -1,6 +1,6 @@
 """
-Integration test for media upload and AI processing pipeline.
-Tests the complete flow: upload -> Azure Vision analysis -> OpenAI caption generation.
+PHASE 3 TEST: Media Upload and AI Processing Pipeline
+Tests: Upload → Azure Vision analysis → OpenAI caption generation
 """
 import requests
 import time
@@ -11,7 +11,7 @@ BASE_URL = "http://127.0.0.1:8000"
 
 def test_upload():
     print("=" * 70)
-    print("MEDIA UPLOAD AND AI PROCESSING - INTEGRATION TEST")
+    print("PHASE 3: MEDIA UPLOAD AND AI PROCESSING - INTEGRATION TEST")
     print("=" * 70)
     
     # Find an image file to upload

@@ -115,6 +115,36 @@ def process_media_task(self, media_id: int, file_path: str):
         media.status = ProcessingStatus.DONE
         media.error_message = None
         
+        # Phase 4: Generate embedding for semantic search
+        try:
+            from app.utils.embeddings import embedding_service
+            
+            # Generate searchable text
+            search_text = embedding_service.generate_search_text(media)
+            media.search_text = search_text
+            
+            # Generate embedding
+            embedding_vector = embedding_service.generate_embedding(search_text)
+            if embedding_vector:
+                media.embedding = embedding_vector  # Store as JSON in SQLite
+                logger.info(f"Generated embedding with {len(embedding_vector)} dimensions")
+            else:
+                logger.warning("Failed to generate embedding")
+            
+            # Detect if image has people (from tags or emotion data)
+            has_people = False
+            if tags:
+                people_tags = ["person", "people", "man", "woman", "child", "face", "portrait"]
+                has_people = any(tag.lower() in people_tags for tag in tags)
+            if not has_people and emotions and "note" not in emotions:
+                # If we have emotion data (not just a note), there are likely people
+                has_people = len(emotions) > 0
+            
+            media.has_people = has_people
+            
+        except Exception as e:
+            logger.error(f"Failed to generate embedding: {str(e)}")
+        
         db.commit()
         db.refresh(media)
         

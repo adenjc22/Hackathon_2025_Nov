@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, JSON, Text, Enum, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, JSON, Text, Enum, func, Boolean
 from sqlalchemy.orm import relationship
 import enum
 
@@ -29,6 +29,11 @@ class Media(Base):
     emotion = Column(JSON, nullable=True)  # Emotion data from Azure Face
     caption = Column(Text, nullable=True)  # Generated caption from OpenAI
     error_message = Column(Text, nullable=True)  # Error details if status=ERROR
+    
+    # Phase 4: Semantic Search fields
+    embedding = Column(JSON, nullable=True)  # Vector embedding for semantic search (stored as JSON for SQLite)
+    search_text = Column(Text, nullable=True)  # Combined searchable text
+    has_people = Column(Boolean, default=False, nullable=True)  # Whether image contains people
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
