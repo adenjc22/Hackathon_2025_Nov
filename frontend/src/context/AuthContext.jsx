@@ -28,37 +28,65 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (payload) => {
-    const formData = new FormData();
-    formData.append("email", payload.email);
-    formData.append("password", payload.password);
-    
-    const { data } = await api.post("/api/auth/login", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    
-    // Store token and set in axios headers
-    localStorage.setItem("accessToken", data.accessToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
-    
-    setUser(data.user);
-    return data.user;
+    try {
+      const formData = new FormData();
+      formData.append("email", payload.email);
+      formData.append("password", payload.password);
+      
+      const { data } = await api.post("/api/auth/login", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      
+      // Handle different response formats
+      const token = data.access_token || data.accessToken;
+      const userData = data.user || data;
+      
+      if (!token) {
+        throw new Error("No access token received from server");
+      }
+      
+      // Store token and set in axios headers
+      localStorage.setItem("accessToken", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      // Ensure errors are properly thrown
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const signup = async (payload) => {
-    const formData = new FormData();
-    formData.append("email", payload.email);
-    formData.append("password", payload.password);
-    
-    const { data } = await api.post("/api/auth/register", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    
-    // Store token and set in axios headers
-    localStorage.setItem("accessToken", data.accessToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
-    
-    setUser(data.user);
-    return data.user;
+    try {
+      const formData = new FormData();
+      formData.append("email", payload.email);
+      formData.append("password", payload.password);
+      
+      const { data } = await api.post("/api/auth/register", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      
+      // Handle different response formats
+      const token = data.access_token || data.accessToken;
+      const userData = data.user || data;
+      
+      if (!token) {
+        throw new Error("No access token received from server");
+      }
+      
+      // Store token and set in axios headers
+      localStorage.setItem("accessToken", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      // Ensure errors are properly thrown
+      console.error("Signup error:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {

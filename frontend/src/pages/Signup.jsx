@@ -11,13 +11,27 @@ export default function Signup() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!form.email || !form.password) {
+      setErr("Please enter both email and password");
+      return;
+    }
+    
+    if (form.password.length < 6) {
+      setErr("Password must be at least 6 characters");
+      return;
+    }
+    
     setBusy(true);
     setErr("");
     try {
       await signup(form);
       nav("/dashboard", { replace: true });
     } catch (e2) {
-      setErr(e2?.response?.data?.detail || e2.message);
+      console.error("Signup error details:", e2);
+      const errorMsg = e2?.response?.data?.detail || e2?.message || "Signup failed. Please try again.";
+      setErr(errorMsg);
     } finally {
       setBusy(false);
     }
@@ -37,8 +51,10 @@ export default function Signup() {
             <span className="sr-only">Email</span>
             <input
               className="input"
+              type="email"
               placeholder="Email"
               autoComplete="email"
+              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
@@ -51,6 +67,8 @@ export default function Signup() {
               className="input"
               placeholder="Password"
               autoComplete="new-password"
+              required
+              minLength={6}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />

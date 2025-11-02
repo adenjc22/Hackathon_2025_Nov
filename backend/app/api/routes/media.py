@@ -1,18 +1,35 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, BackgroundTasks
 from pathlib import Path
 import uuid
 import os
 from sqlalchemy.orm import Session
 from app.services import storage
-from app.database.models_media import Media 
+from app.database.models_media import Media, ProcessingStatus
 from app.database.session import get_db
 from app.core.dependencies import get_current_user
 from app.database.models_user import User
+from app.ai_pipeline import process_media_sync
 # Note: we define a local MediaRead (below) so we don't need to import the project's
 # schema here. Importing it earlier caused a name collision and unexpected behavior.
+
+
+def get_backend_url(request: Request) -> str:
+    """
+    Dynamically determine backend URL based on environment.
+    Priority: 
+    1. BACKEND_URL env var (for explicit override)
+    2. Request's base URL (auto-detects Railway/localhost)
+    """
+    # Check if BACKEND_URL is explicitly set
+    backend_url = os.getenv("BACKEND_URL")
+    if backend_url:
+        return backend_url
+    
+    # Auto-detect from request (works for both Railway and localhost)
+    return str(request.base_url).rstrip('/')
 
 
 router = APIRouter(tags=["Media"])
@@ -36,6 +53,11 @@ class MediaRead(MediaBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     file_url: Optional[str] = None
+    status: Optional[str] = None
+    tags: Optional[List[str]] = None
+    emotion: Optional[dict] = None
+    caption: Optional[str] = None
+    error_message: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -43,6 +65,8 @@ class MediaRead(MediaBase):
 
 @router.post("/", response_model=MediaRead)
 async def upload_media(
+    request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...), 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -79,14 +103,23 @@ async def upload_media(
         size_bytes=metadata.get("size_bytes", len(contents)),
         metadata_json=metadata,
         owner_id=owner_id,
+        status=ProcessingStatus.PENDING,  # Set initial status
     )
 
     db.add(media_row)
     db.commit()
     db.refresh(media_row)
 
-    # Build the response with FULL file URL (including backend domain)
-    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
+    # 🔥 TRIGGER AI PIPELINE - Process tags, captions, and embeddings
+    # Run in background so upload returns immediately
+    background_tasks.add_task(
+        process_media_sync,
+        media_id=media_row.id,
+        file_path=str(dest_path)
+    )
+
+    # Build the response with FULL file URL (dynamically determined)
+    backend_url = get_backend_url(request)
     response = MediaRead.from_orm(media_row)
     response.file_url = f"{backend_url}/uploads/{Path(media_row.stored_path).name}"
     
@@ -95,11 +128,12 @@ async def upload_media(
 
 @router.get("/", response_model=List[MediaRead])
 async def list_media(
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Retrieve all uploaded media for the current user."""
-    backend_url = os.getenv("BACKEND_URL", "https://memory-lane-backend.up.railway.app")
+    backend_url = get_backend_url(request)
     # Filter media by the current user's ID
     media_items = db.query(Media).filter(Media.owner_id == current_user.id).order_by(Media.created_at.desc()).all()
     results = []
@@ -136,3 +170,25 @@ async def delete_media(
     db.commit()
     
     return {"message": "Media deleted successfully"}
+
+
+@router.get("/status/{media_id}", response_model=MediaRead)
+async def get_media_status(
+    media_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Get the processing status and AI results for a media item.
+    Frontend can poll this endpoint to track processing progress.
+    """
+    media_item = db.query(Media).filter(Media.id == media_id).first()
+    
+    if not media_item:
+        raise HTTPException(status_code=404, detail="Media not found")
+    
+    backend_url = get_backend_url(request)
+    response = MediaRead.from_orm(media_item)
+    response.file_url = f"{backend_url}/uploads/{Path(media_item.stored_path).name}"
+    
+    return response

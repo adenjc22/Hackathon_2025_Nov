@@ -1,0 +1,262 @@
+"""
+Azure Face API integration for emotion detection and face analysis.
+Detects faces and analyzes emotions, age, gender, and other attributes.
+"""
+
+import os
+import requests
+from typing import Dict, List, Optional
+from loguru import logger
+
+
+class AzureFaceAPI:
+    """Handles Azure Face API calls for emotion and face detection."""
+    
+    def __init__(self):
+        self.api_key = os.getenv("AZURE_FACE_KEY")
+        self.endpoint = os.getenv("AZURE_FACE_ENDPOINT")
+        
+        if not self.api_key or not self.endpoint:
+            logger.warning("Azure Face API credentials not configured")
+        
+        # Remove trailing slash from endpoint if present
+        if self.endpoint and self.endpoint.endswith("/"):
+            self.endpoint = self.endpoint[:-1]
+    
+    def detect_emotion(self, image_url: str) -> Dict:
+        """
+        Detect faces and emotions in an image using Azure Face API.
+        
+        Args:
+            image_url: Public URL of the image to analyze
+            
+        Returns:
+            Dictionary containing detected faces, emotions, and attributes
+        """
+        if not self.api_key or not self.endpoint:
+            logger.error("Azure Face API not configured")
+            return {
+                "faces": [],
+                "emotions": {},
+                "error": "Azure Face API not configured"
+            }
+        
+        try:
+            # Build the detect endpoint
+            detect_url = f"{self.endpoint}/face/v1.0/detect"
+            
+            # Note: 'emotion' requires Limited Access approval from Microsoft
+            # Removing it for now - will use basic face detection only
+            params = {
+                "returnFaceId": "true",
+                "returnFaceLandmarks": "false",
+                "returnFaceAttributes": "smile,glasses,accessories"
+            }
+            
+            headers = {
+                "Ocp-Apim-Subscription-Key": self.api_key,
+                "Content-Type": "application/json"
+            }
+            
+            body = {
+                "url": image_url
+            }
+            
+            logger.info(f"Detecting faces and emotions: {image_url}")
+            response = requests.post(
+                detect_url,
+                params=params,
+                headers=headers,
+                json=body,
+                timeout=30
+            )
+            
+            response.raise_for_status()
+            faces = response.json()
+            
+            if not faces:
+                logger.info("No faces detected in image")
+                return {
+                    "faces": [],
+                    "emotions": {},
+                    "face_count": 0
+                }
+            
+            # Process emotions from all detected faces
+            all_emotions = []
+            face_details = []
+            
+            for face in faces:
+                attributes = face.get("faceAttributes", {})
+                emotion = attributes.get("emotion", {})
+                
+                face_info = {
+                    "age": attributes.get("age"),
+                    "gender": attributes.get("gender"),
+                    "smile": attributes.get("smile"),
+                    "emotion": emotion,
+                    "glasses": attributes.get("glasses"),
+                    "facial_hair": attributes.get("facialHair")
+                }
+                
+                face_details.append(face_info)
+                all_emotions.append(emotion)
+            
+            # Calculate average emotions across all faces
+            if all_emotions:
+                avg_emotions = {}
+                emotion_keys = all_emotions[0].keys()
+                for key in emotion_keys:
+                    avg_emotions[key] = sum(e.get(key, 0) for e in all_emotions) / len(all_emotions)
+            else:
+                avg_emotions = {}
+            
+            # Find dominant emotion
+            dominant_emotion = None
+            max_score = 0
+            if avg_emotions:
+                for emotion_name, score in avg_emotions.items():
+                    if score > max_score:
+                        max_score = score
+                        dominant_emotion = emotion_name
+            
+            result = {
+                "faces": face_details,
+                "emotions": avg_emotions,
+                "dominant_emotion": dominant_emotion,
+                "face_count": len(faces),
+                "raw_response": faces
+            }
+            
+            logger.info(f"Successfully detected {len(faces)} face(s), dominant emotion: {dominant_emotion}")
+            return result
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Azure Face API request failed: {str(e)}")
+            return {
+                "faces": [],
+                "emotions": {},
+                "error": f"API request failed: {str(e)}"
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error in Azure Face detection: {str(e)}")
+            return {
+                "faces": [],
+                "emotions": {},
+                "error": f"Unexpected error: {str(e)}"
+            }
+    
+    def detect_emotion_from_file(self, file_path: str) -> Dict:
+        """
+        Detect faces and emotions from a local image file.
+        
+        Args:
+            file_path: Local path to the image file
+            
+        Returns:
+            Dictionary containing detected faces, emotions, and attributes
+        """
+        if not self.api_key or not self.endpoint:
+            logger.error("Azure Face API not configured")
+            return {
+                "faces": [],
+                "emotions": {},
+                "error": "Azure Face API not configured"
+            }
+        
+        try:
+            detect_url = f"{self.endpoint}/face/v1.0/detect"
+            
+            # Note: 'emotion' requires Limited Access approval from Microsoft
+            # Using smile detection as an alternative indicator of positive mood
+            params = {
+                "returnFaceId": "true",
+                "returnFaceLandmarks": "false",
+                "returnFaceAttributes": "smile,glasses,accessories"
+            }
+            
+            headers = {
+                "Ocp-Apim-Subscription-Key": self.api_key,
+                "Content-Type": "application/octet-stream"
+            }
+            
+            with open(file_path, "rb") as image_file:
+                image_data = image_file.read()
+            
+            logger.info(f"Detecting faces in local image: {file_path}")
+            response = requests.post(
+                detect_url,
+                params=params,
+                headers=headers,
+                data=image_data,
+                timeout=30
+            )
+            
+            response.raise_for_status()
+            faces = response.json()
+            
+            if not faces:
+                return {
+                    "faces": [],
+                    "emotions": {},
+                    "face_count": 0
+                }
+            
+            # Process same as URL method
+            all_emotions = []
+            face_details = []
+            
+            for face in faces:
+                attributes = face.get("faceAttributes", {})
+                emotion = attributes.get("emotion", {})
+                
+                face_info = {
+                    "age": attributes.get("age"),
+                    "gender": attributes.get("gender"),
+                    "smile": attributes.get("smile"),
+                    "emotion": emotion,
+                    "glasses": attributes.get("glasses"),
+                    "facial_hair": attributes.get("facialHair")
+                }
+                
+                face_details.append(face_info)
+                all_emotions.append(emotion)
+            
+            # Calculate average emotions
+            avg_emotions = {}
+            if all_emotions:
+                emotion_keys = all_emotions[0].keys()
+                for key in emotion_keys:
+                    avg_emotions[key] = sum(e.get(key, 0) for e in all_emotions) / len(all_emotions)
+            
+            # Find dominant emotion
+            dominant_emotion = None
+            max_score = 0
+            if avg_emotions:
+                for emotion_name, score in avg_emotions.items():
+                    if score > max_score:
+                        max_score = score
+                        dominant_emotion = emotion_name
+            
+            result = {
+                "faces": face_details,
+                "emotions": avg_emotions,
+                "dominant_emotion": dominant_emotion,
+                "face_count": len(faces),
+                "raw_response": faces
+            }
+            
+            logger.info(f"Successfully detected {len(faces)} face(s)")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error detecting faces in file: {str(e)}")
+            return {
+                "faces": [],
+                "emotions": {},
+                "error": f"Error: {str(e)}"
+            }
+
+
+# Singleton instance
+azure_face = AzureFaceAPI()
