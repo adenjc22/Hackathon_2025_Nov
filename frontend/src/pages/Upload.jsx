@@ -20,11 +20,11 @@ export default function Upload() {
     setSuccess(false);
 
     try {
-      // Upload each file individually to /media/ endpoint
+      // Upload each file individually to /api/upload/media/ endpoint
       const uploadPromises = files.map(async (file) => {
         const fd = new FormData();
         fd.append("file", file);
-        return api.post("/media/", fd, {
+        return api.post("/api/upload/media/", fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       });

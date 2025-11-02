@@ -12,7 +12,7 @@ from app.database.session import get_db
 # schema here. Importing it earlier caused a name collision and unexpected behavior.
 
 
-router = APIRouter(prefix="/media", tags=["Media"])
+router = APIRouter(tags=["Media"])
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

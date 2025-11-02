@@ -181,7 +181,7 @@ app.include_router(health_router, prefix="/api/health", tags=["Health"])
 app.include_router(uploads_router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(media_router, tags=["Media"])
+app.include_router(media_router, prefix="/api/upload/media", tags=["Media"])
 
 # Mount static files for uploaded media
 UPLOAD_DIR = Path("uploads")

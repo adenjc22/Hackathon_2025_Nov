@@ -12,12 +12,16 @@ export default function UploadForm({ onComplete }) {
     if (!files.length) return;
     setBusy(true);
     setErr("");
-    const fd = new FormData();
-    files.forEach((f) => fd.append("files", f));
+    
     try {
-      await api.post("/api/upload/media", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // Upload each file individually
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        await api.post("/api/upload/media/", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
       onComplete?.();
       setFiles([]);
     } catch (e) {

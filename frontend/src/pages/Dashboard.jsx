@@ -11,7 +11,7 @@ export default function Dashboard() {
 
   const load = async () => {
     try {
-      const { data } = await api.get("/media/");
+      const { data } = await api.get("/api/upload/media/");
       // Transform the backend response to match MediaGrid's expected format
       const transformedData = data.map((item) => ({
         id: item.id,
